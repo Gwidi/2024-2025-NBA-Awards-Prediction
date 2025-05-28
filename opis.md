@@ -124,3 +124,104 @@ Wartość `0` w tych kolumnach oznaczała, że zawodnik **nie został nominowany
 Aby umożliwić poprawne połączenie statystyk z informacjami o nominacjach, plik z nominacjami z poszczególnych lat został **przekształcony z formatu szerokiego na format długi** ("long format"). Dzięki temu każdy wiersz odpowiadał pojedynczemu zawodnikowi, konkretnemu sezonowi oraz przypisanej mu kategorii wyróżnienia. Takie przygotowanie danych pozwoliło na jednoznaczne powiązanie rekordów statystycznych z etykietami wykorzystywanymi podczas trenowania modeli klasyfikacyjnych.
 
 ---
+
+# Dlaczego zastosowano RandomForestClassifier?
+
+Do realizacji tego projektu wybrano algorytm **RandomForestClassifier** ze względu na specyfikę dostępnego zbioru danych oraz naturę zadania klasyfikacyjnego:
+
+- **Wysoka liczba cech liczbowych:**  
+  Statystyki graczy NBA obejmują wiele różnych zmiennych numerycznych (np. punkty, asysty, zbiórki, minuty, efektywność i inne), które są często ze sobą nieliniowo powiązane. Random Forest bardzo dobrze radzi sobie z wieloma cechami oraz ich interakcjami, a także automatycznie ocenia istotność poszczególnych zmiennych.
+
+- **Złożone zależności i brak założeń o rozkładzie danych:**  
+  Klasyczne metody liniowe mogą nie radzić sobie ze złożonością zależności w statystykach sportowych. RandomForestClassifier nie wymaga założenia liniowości ani normalności rozkładu cech, co czyni go uniwersalnym wyborem dla tego typu danych.
+
+- **Odporność na przeuczenie:**  
+  Dzięki zastosowaniu wielu drzew decyzyjnych oraz mechanizmowi losowego wyboru cech, Random Forest jest mniej podatny na przeuczenie, nawet jeśli poszczególne drzewa są głęboko dopasowane do fragmentów zbioru treningowego.
+
+- **Radzenie sobie z niezbalansowanymi klasami:**  
+  W projekcie liczba graczy wyróżnionych w danym sezonie (np. wybranych do All-NBA Team) jest zdecydowanie mniejsza niż liczba wszystkich zawodników. RandomForestClassifier, w połączeniu z technikami typu SMOTE do oversamplingu, dobrze radzi sobie w takich sytuacjach i umożliwia uzyskanie stabilnych wyników klasyfikacji.
+
+- **Intuicyjna interpretacja wyników:**  
+  Random Forest pozwala na ocenę ważności cech, dzięki czemu można zinterpretować, które statystyki mają największy wpływ na szanse zawodnika na nominację do All-NBA Teams lub All-NBA Rookie Teams.
+
+Dzięki powyższym cechom, RandomForestClassifier jest narzędziem elastycznym, skutecznym oraz łatwym do wdrożenia i interpretacji przy analizie danych sportowych tego typu.
+
+
+# Techniki wykorzystane do trenowania modeli
+
+Podczas trenowania modeli zastosowano kilka nowoczesnych technik i narzędzi, które pozwoliły zoptymalizować proces budowy i oceny modeli klasyfikacyjnych.
+
+## GridSearchCV
+
+Do wyboru najlepszych hiperparametrów modeli zastosowano metodę **GridSearchCV**. GridSearch polega na automatycznym przeszukiwaniu zdefiniowanej siatki kombinacji parametrów modelu (np. liczba drzew, głębokość drzewa, minimalna liczba próbek w liściu itp.). Dla każdej kombinacji model jest trenowany i oceniany na zbiorze walidacyjnym przy użyciu techniki **cross-validation** (walidacji krzyżowej). 
+
+Celem GridSearch jest znalezienie zestawu parametrów, który daje najlepsze wyniki (np. najwyższy wynik f1_score) na podstawie zdefiniowanej metryki.
+
+**Przykład działania:**
+- Tworzymy siatkę możliwych wartości hiperparametrów, np. liczba drzew: [100, 200, 500], głębokość drzewa: [10, 20, None].
+- GridSearch testuje każdą możliwą kombinację tych wartości, trenując model za każdym razem na innych danych w ramach cross-validation.
+- Wyniki są porównywane, a do końcowego modelu wybierana jest konfiguracja o najlepszym wyniku.
+
+## MLOps i MLflow
+
+Do zarządzania procesem eksperymentowania z modelami oraz ich wersjonowaniem wykorzystano narzędzie **MLflow**, które jest przykładem podejścia **MLOps** (Machine Learning Operations). Pozwala ono na:
+- automatyczne zapisywanie parametrów, metryk, wykresów i artefaktów każdego eksperymentu,
+- łatwe porównywanie różnych wersji modeli i konfiguracji,
+- powtarzalność eksperymentów i przechowywanie całej historii trenowania.
+
+Dzięki MLflow możliwe było systematyczne testowanie różnych ustawień modeli, rejestrowanie najlepszych wyników oraz szybki powrót do wybranych wersji w przyszłości.
+
+## Podsumowanie
+
+Zastosowanie GridSearchCV i MLOps (MLflow) pozwoliło nie tylko zoptymalizować proces wyboru najlepszego modelu, ale również zachować pełną transparentność, powtarzalność i kontrolę nad eksperymentami podczas całego cyklu życia projektu.
+
+---
+
+# Jak przebiega proces predykcji?
+
+Proces predykcji został w pełni zautomatyzowany w pliku `predict.py` i obejmuje następujące etapy:
+
+1. **Wczytanie danych zawodników**
+   
+   Do predykcji wykorzystywany jest plik `final_dataset_for_prediction.csv`, zawierający dane statystyczne graczy z ostatniego sezonu (m.in. punkty, minuty, zbiórki oraz informację, czy zawodnik jest debiutantem).
+
+2. **Podział danych na grupy**
+   
+   Zawodnicy są dzieleni na dwie grupy:
+   - zawodnicy z odpowiednią liczbą rozegranych meczów, którzy **nie są debiutantami** (do typowania All-NBA Teams),
+   - zawodnicy z odpowiednią liczbą meczów, którzy **są debiutantami** (do typowania All-NBA Rookie Team).
+
+3. **Wczytanie wytrenowanych modeli**
+   
+   Za pomocą MLflow ładowane są dwa modele:
+   - model do typowania All-NBA Teams,
+   - model do typowania All-NBA Rookie Teams.
+
+4. **Predykcja przynależności do drużyn**
+   
+   - Dla każdej grupy zawodników wykonywana jest predykcja przynależności do odpowiedniej drużyny (`1st`, `2nd`, `3rd` lub brak nominacji dla All-NBA; `1st`, `2nd` lub brak nominacji dla All-Rookie).
+   - Wyniki predykcji są przypisywane do DataFrame z danymi zawodników.
+
+5. **Selekcja zawodników do drużyn**
+   
+   Po predykcji zawodnicy są sortowani według kategorii drużyny i ich liczby zdobytych punktów, a następnie wybierana jest piątka graczy do każdej z drużyn (pierwsza, druga, trzecia). Jeśli w którejś drużynie zabraknie graczy, kolejne osoby są dobierane zgodnie z rankingiem punktowym.
+
+6. **Zapis wyników**
+   
+   Wyniki predykcji, czyli składy wszystkich drużyn (All-NBA i All-Rookie), zapisywane są do pliku JSON w czytelnym formacie.
+
+## Fragment przykładowego kodu predykcji
+
+```python
+import mlflow.sklearn
+import pandas as pd
+
+# Wczytanie danych i modeli
+df = pd.read_csv('../data/final_dataset_for_prediction.csv')
+model = mlflow.sklearn.load_model('...ścieżka do modelu...')
+results = model.predict(df[wybrane_kolumny])
+
+# Przypisanie wyników do DataFrame i wybór drużyn
+df['prediction'] = results
+first_team = df[df['prediction'] == '1'].sort_values('PTS', ascending=False).head(5)['PLAYER'].tolist()
+```
