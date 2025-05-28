@@ -37,16 +37,15 @@ Celem projektu było stworzenie modeli uczenia maszynowego, które automatycznie
 - **league_leaders_2000_2024_with_rookies_and_all_rookie_team.csv**  
   Zbiór danych używany do treningu i testów.
 
-## Technologie
-
-- Python (pandas, numpy, scikit-learn, imbalanced-learn, matplotlib)
-- MLflow
-- RandomForestClassifier
-- SMOTE
-
 ## Uruchomienie
 
 1. **Trenowanie modeli:**
    ```bash
    python train_all_nba_teams.py
    python train_all_nba_teams_rookie.py
+
+2. **Predykcja na nowym sezonie**
+   ```bash
+   python predict.py
+
+
