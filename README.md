@@ -33,7 +33,7 @@ Celem projektu było stworzenie modeli uczenia maszynowego, które automatycznie
 - **train_all_nba_teams_rookie.py**  
   Trenuje model dla All-Rookie Teams.
 - **predict.py**  
-  Wczytuje modele i generuje predykcje do pliku JSON (`gwidon_szczepankiewicz.json`).
+  Wczytuje modele i generuje predykcje do pliku JSON.
 - **league_leaders_2000_2024_with_rookies_and_all_rookie_team.csv**  
   Zbiór danych używany do treningu i testów.
 
