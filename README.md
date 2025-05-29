@@ -46,6 +46,6 @@ Celem projektu było stworzenie modeli uczenia maszynowego, które automatycznie
 
 2. **Predykcja na nowym sezonie**
    ```bash
-   python predict.py
+   python predict.py <file_path/file.json>
    ```
 

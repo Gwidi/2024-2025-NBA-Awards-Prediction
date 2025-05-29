@@ -123,6 +123,10 @@ Wartość `0` w tych kolumnach oznaczała, że zawodnik **nie został nominowany
 
 Aby umożliwić poprawne połączenie statystyk z informacjami o nominacjach, plik z nominacjami z poszczególnych lat został **przekształcony z formatu szerokiego na format długi** ("long format"). Dzięki temu każdy wiersz odpowiadał pojedynczemu zawodnikowi, konkretnemu sezonowi oraz przypisanej mu kategorii wyróżnienia. Takie przygotowanie danych pozwoliło na jednoznaczne powiązanie rekordów statystycznych z etykietami wykorzystywanymi podczas trenowania modeli klasyfikacyjnych.
 
+## 5. Analiza danych
+
+Po przygotowaniu głównego zbioru danych przeprowadziłem eksploracyjną analizę danych (EDA) za pomocą narzędzia `ydata_profiling`. Wykorzystałem funkcję `ProfileReport`, aby automatycznie wygenerować szczegółowy raport opisujący strukturę, rozkłady, korelacje i ewentualne nieprawidłowości w danych.
+
 ---
 
 # Dlaczego zastosowano RandomForestClassifier?
